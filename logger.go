@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // Type represents logger's type
@@ -31,6 +33,9 @@ const (
 	// :remote-addr - :remote-user [:date[clf]] ":method :url
 	// HTTP/:http-version" :status :res[content-length]
 	CommonLoggerType
+
+	//
+	JsonLoggerType
 	// DevLoggerType is useful for development
 	//
 	// format:
@@ -129,6 +134,17 @@ func (rh loggerHanlder) write(rl *responseLogger, req *http.Request) {
 			`"` + req.Referer() + `"`,
 			`"` + req.UserAgent() + `"`,
 		}, " "))
+	case JsonLoggerType:
+		log.WithFields(log.Fields{
+			"request.method":     req.Method,
+			"request.proto":      req.Proto,
+			"request.url":        req.RequestURI,
+			"request.referer":    req.Referer(),
+			"request.user_agent": req.UserAgent(),
+			"start_time":         rl.start.Format(timeFormat),
+			"response.status":    strconv.Itoa(rl.status),
+			"client_address":     req.RemoteAddr,
+		}).Info("request processed")
 	case CommonLoggerType:
 		fmt.Fprintln(rh.writer, strings.Join([]string{
 			req.RemoteAddr,

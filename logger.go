@@ -3,6 +3,7 @@ package logger
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
@@ -121,6 +122,11 @@ func (rh loggerHanlder) write(rl *responseLogger, req *http.Request) {
 		}
 	}
 
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		panic(err)
+	}
+
 	switch rh.formatType {
 	case CombineLoggerType:
 		fmt.Fprintln(rh.writer, strings.Join([]string{
@@ -138,14 +144,19 @@ func (rh loggerHanlder) write(rl *responseLogger, req *http.Request) {
 		}, " "))
 	case JsonLoggerType:
 		log.WithFields(log.Fields{
+			// request
 			"request.method":     req.Method,
 			"request.proto":      req.Proto,
-			"request.url":        req.RequestURI,
+			"request.url":        req.URL,
 			"request.referer":    req.Referer(),
 			"request.user_agent": req.UserAgent(),
+			"request.header":     req.Header,
 			"start_time":         rl.start.Format(timeFormat),
-			"response.status":    strconv.Itoa(rl.status),
-			"client_address":     req.RemoteAddr,
+			"body":               string(body),
+			// response
+			"response.status": strconv.Itoa(rl.status),
+			"response.size":   strconv.Itoa(rl.size),
+			"client_address":  req.RemoteAddr,
 		}).Info("request processed")
 	case CommonLoggerType:
 		fmt.Fprintln(rh.writer, strings.Join([]string{

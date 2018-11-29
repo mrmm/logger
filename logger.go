@@ -105,6 +105,8 @@ type loggerHanlder struct {
 func (rh loggerHanlder) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	rl := &responseLogger{rw: res, start: time.Now()}
 
+	log.SetFormatter(&log.JSONFormatter{})
+
 	rh.h.ServeHTTP(rl, req)
 
 	rh.write(rl, req)

@@ -145,6 +145,7 @@ func (rh loggerHanlder) write(rl *responseLogger, req *http.Request) {
 	case JsonLoggerType:
 		log.WithFields(log.Fields{
 			// request
+			"request.host":       req.Host,
 			"request.method":     req.Method,
 			"request.proto":      req.Proto,
 			"request.url":        req.URL,
